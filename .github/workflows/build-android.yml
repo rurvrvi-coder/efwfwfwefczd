@@ -20,39 +20,24 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
         with:
-          flutter-version: '3.16.0'
-          channel: 'stable'
-
-      - name: Flutter version
-        run: flutter --version
-
-      - name: Enable Android
-        run: flutter config --enable-android
-
-      - name: Pub get
-        working-directory: mobile
-        run: flutter pub get
-
-      - name: Check Android toolchain
-        run: flutter doctor -v
+          gradle-version: '8.0'
 
       - name: Build APK
-        working-directory: mobile
+        working-directory: android-native
         run: |
-          flutter build apk --release -v
-        continue-on-error: false
+          gradle wrapper --gradle-version 8.0
+          ./gradlew assembleRelease --no-daemon
 
-      - name: Check build output
+      - name: List APK files
         run: |
-          ls -la mobile/build/app/outputs/flutter-apk/ || echo "No APK found"
+          find . -name "*.apk" -type f -ls
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: tg-ws-proxy-apk
-          path: mobile/build/app/outputs/flutter-apk/*.apk
+          path: android-native/app/build/outputs/apk/release/*.apk
           retention-days: 14
